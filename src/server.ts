@@ -1,0 +1,20 @@
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
+import routes from "../src/routes/userRoutes";
+import connectDB from "./utils/db";
+import salesRoutes from "./routes/salesRoutes";
+import attendanceRoutes from "./routes/attendanceRoute";
+import passwordRoutes from "./routes/forgetRoute";
+dotenv.config();
+connectDB();
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use("/api", routes);
+app.use("/api/sales", salesRoutes);
+app.use("/attendance", attendanceRoutes);
+app.use("/api/password", passwordRoutes);
+app.listen(process.env.PORT, () => {
+console.log(`Server running on port ${process.env.PORT}`);
+});
