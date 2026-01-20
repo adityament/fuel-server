@@ -8,7 +8,7 @@ import salesRoutes from "./routes/salesRoutes";
 import attendanceRoutes from "./routes/attendanceRoute";
 import passwordRoutes from "./routes/passwordRoute";
 import { seedSuperAdmin } from "./superAdmin.seed";
-
+import contactRoutes from "./routes/contacrRoutes";
 
 const startServer = async () => {
   try {
@@ -24,7 +24,7 @@ const startServer = async () => {
     app.use("/api/sales", salesRoutes);
     app.use("/api/attendance", attendanceRoutes);
     app.use("/api/password", passwordRoutes);
-
+    app.use("/api/contact", contactRoutes);
     app.listen(process.env.PORT, () => {
       console.log(`🚀 Server running on port ${process.env.PORT}`);
     });
