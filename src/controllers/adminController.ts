@@ -55,3 +55,47 @@ export const getMyStaff = async (req: any, res: Response) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const updateAdminProfile = async (req: any, res: Response) => {
+  try {
+    const adminId = req.user._id;
+
+    // ❌ email intentionally excluded
+    const { username, phone, password, location } = req.body;
+
+    // 🔒 extra safety
+    if ("email" in req.body) {
+      return res.status(400).json({
+        message: "Email cannot be updated",
+      });
+    }
+
+    const updateData: any = {};
+
+    if (username) updateData.username = username;
+    if (phone) updateData.phone = phone;
+    if (location) updateData.location = location;
+
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    const admin = await User.findOneAndUpdate(
+      { _id: adminId, role: "admin" },
+      updateData,
+      { new: true }
+    ).select("-password");
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    res.json({
+      message: "Admin profile updated successfully",
+      admin,
+    });
+  } catch (error) {
+    console.error("Update admin error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
