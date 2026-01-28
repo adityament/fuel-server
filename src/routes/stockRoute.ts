@@ -4,7 +4,7 @@ import {
   getAllStocks,
   getStockById,
   updateStock,
-  deleteStock
+  deleteStock,
 } from "../controllers/stockController";
 import { allowRoles, auth } from "../middleware/authMiddleware";
 const router = express.Router();

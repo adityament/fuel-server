@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IStock extends Document {
   adminId: mongoose.Types.ObjectId;
+  createdBy: mongoose.Types.ObjectId; 
   fuelType: string;
   tankId: string;
   dipReading: number;
@@ -10,6 +11,7 @@ export interface IStock extends Document {
   totalStock: number;
   sales: number;
   closingStock: number;
+  tankCapacity: number; // Tank ki max limit
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,6 +19,7 @@ export interface IStock extends Document {
 const stockSchema = new Schema<IStock>(
   {
     adminId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     fuelType: { type: String, required: true },
     tankId: { type: String, required: true },
     dipReading: { type: Number, required: true },
@@ -25,6 +28,7 @@ const stockSchema = new Schema<IStock>(
     totalStock: { type: Number, required: true },
     sales: { type: Number, default: 0 },
     closingStock: { type: Number, required: true },
+    tankCapacity: { type: Number, required: true }, // Added
   },
   { timestamps: true }
 );

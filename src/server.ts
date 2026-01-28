@@ -9,11 +9,13 @@ import attendanceRoutes from "./routes/attendanceRoute";
 import passwordRoutes from "./routes/passwordRoute";
 import { seedSuperAdmin } from "./superAdmin.seed";
 import contactRoutes from "./routes/contacrRoutes";
+import stockRoutes from "./routes/stockRoute";
+import tankRoutes from "./routes/tankRoutes";
 
 const startServer = async () => {
   try {
-    await connectDB(); // 1️⃣ DB connected
-    await seedSuperAdmin(); // 2️⃣ Seed check + insert
+    await connectDB();
+    await seedSuperAdmin();
 
     const app = express();
 
@@ -25,6 +27,8 @@ const startServer = async () => {
     app.use("/api/attendance", attendanceRoutes);
     app.use("/api/password", passwordRoutes);
     app.use("/api/contact", contactRoutes);
+    app.use("/api/stocks",stockRoutes)
+    app.use("/api/tanks", tankRoutes);
     app.listen(process.env.PORT, () => {
       console.log(`🚀 Server running on port ${process.env.PORT}`);
     });

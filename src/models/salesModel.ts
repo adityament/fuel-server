@@ -1,35 +1,43 @@
-import mongoose from "mongoose";
+import mongoose, { Document } from "mongoose";
 
-export interface ISale {
+export interface ISale extends Document {
   nozzleId: string;
   fuelType: string;
+
   openingReading: number;
   closingReading: number;
+
   rate: number;
   quantity: number;
   amount: number;
+
   paymentMode?: string;
   shift: string;
-  customerId?: string;
-  date: Date;
 
-  createdBy: mongoose.Types.ObjectId; // staff/admin
-  adminId: mongoose.Types.ObjectId;   // admin owner
+  customerId?: string;
+
+  createdBy: mongoose.Types.ObjectId;
+  adminId: mongoose.Types.ObjectId;
+
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const saleSchema = new mongoose.Schema(
   {
     nozzleId: { type: String, required: true },
     fuelType: { type: String, required: true },
+
     openingReading: Number,
     closingReading: Number,
+
     rate: Number,
     quantity: Number,
     amount: Number,
+
     paymentMode: String,
     shift: String,
     customerId: String,
-    date: Date,
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -43,7 +51,7 @@ const saleSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model<ISale>("Sale", saleSchema);
