@@ -16,6 +16,13 @@ export interface ISale extends Document {
 
   customerId?: string;
 
+  // 🔗 The exact stock row this sale deducted from (so edits/voids
+  //    adjust the right tank balance, not just the latest one).
+  stockId?: mongoose.Types.ObjectId;
+
+  // 🗑️ Soft delete — voided sales are hidden from lists but never lost.
+  isVoid: boolean;
+
   createdBy: mongoose.Types.ObjectId;
   adminId: mongoose.Types.ObjectId;
 
@@ -39,6 +46,13 @@ const saleSchema = new mongoose.Schema(
     shift: String,
     customerId: String,
 
+    stockId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Stock",
+    },
+
+    isVoid: { type: Boolean, default: false },
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -53,5 +67,10 @@ const saleSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+// 🚀 Indexes for the scoped list queries in the sales controller
+saleSchema.index({ adminId: 1, createdAt: -1 });   // getAllSales (admin)
+saleSchema.index({ createdBy: 1, createdAt: -1 });  // getAllSales (staff)
+saleSchema.index({ adminId: 1, fuelType: 1 });      // stock-deduction lookups
 
 export default mongoose.model<ISale>("Sale", saleSchema);

@@ -1,6 +1,6 @@
 import express from "express";
 import { login } from "../controllers/authController";
-import { createAdmin, listAdmins } from "../controllers/superAdminController";
+import { createAdmin, listAdmins, getSuperAdminStats } from "../controllers/superAdminController";
 import {
   createStaff,
   deleteStaff,
@@ -14,6 +14,7 @@ router.post("/login", login);
 router.put("/admin/update", auth, allowRoles("admin"), updateAdminProfile);
 router.post("/registeradmin", auth, allowRoles("superadmin"), createAdmin);
 router.get("/listadmin", auth, allowRoles("superadmin"), listAdmins);
+router.get("/superadmin/stats", auth, allowRoles("superadmin"), getSuperAdminStats);
 router.get("/staff", auth, allowRoles("admin"), getMyStaff);
 router.post("/registerstaff", auth, allowRoles("admin"), createStaff);
 router.delete("/staff/:id", auth, allowRoles("admin"), deleteStaff);

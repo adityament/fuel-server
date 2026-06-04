@@ -33,4 +33,8 @@ const attendanceSchema = new Schema<IAttendance>(
   { timestamps: true }
 );
 
+// 🚀 Indexes for attendance lookups (by staff, by admin, daily range)
+attendanceSchema.index({ employeeId: 1, createdAt: -1 });
+attendanceSchema.index({ adminId: 1, createdAt: -1 });
+
 export default mongoose.model<IAttendance>("Attendance", attendanceSchema);
