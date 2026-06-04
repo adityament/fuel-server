@@ -47,7 +47,7 @@ export const getMyStaff = async (req: any, res: Response) => {
     const staff = await User.find({
       role: "staff",
       adminId: req.user._id,
-    }).select("-password");
+    }).select("-password").lean();
 
     res.json(staff);
   } catch (error) {

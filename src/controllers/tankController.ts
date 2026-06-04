@@ -95,7 +95,7 @@ export const getAllTanks = async (req: any, res: Response) => {
 
     const tanks = await Tank.find({ adminId }).sort({
       createdAt: -1,
-    });
+    }).lean();
 
     res.json(tanks);
   } catch (err) {
