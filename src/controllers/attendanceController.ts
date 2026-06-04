@@ -114,7 +114,8 @@ export const getAttendance = async (req: Request, res: Response) => {
 
     const records = await Attendance.find(filter)
       .populate("employeeId", "username") // ✅ ONLY USERNAME
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.json(records);
   } catch (error) {

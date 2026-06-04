@@ -26,7 +26,7 @@ export const auth = async (req: any, res: Response, next: NextFunction) => {
       return res.status(401).json({ message: "Invalid token" });
     }
 
-    const user = await User.findById(decoded.id).select("-password");
+    const user = await User.findById(decoded.id).select("-password").lean();
     if (!user) {
       return res.status(401).json({ message: "Invalid token" });
     }

@@ -109,7 +109,7 @@ export const getAllStocks = async (req: any, res: Response) => {
 
     const stocks = await Stock.find({ adminId }).sort({
       createdAt: -1,
-    });
+    }).lean();
 
     res.json(stocks);
   } catch (error) {

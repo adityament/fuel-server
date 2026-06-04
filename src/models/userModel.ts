@@ -45,4 +45,7 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
+// 🚀 Index for getMyStaff ( find by adminId + role ); email already unique-indexed
+userSchema.index({ adminId: 1, role: 1 });
+
 export default mongoose.model<IUser>("User", userSchema);

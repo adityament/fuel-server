@@ -33,4 +33,9 @@ const stockSchema = new Schema<IStock>(
   { timestamps: true }
 );
 
+// 🚀 Indexes for the scoped/sorted lookups in the stock controller
+stockSchema.index({ adminId: 1, createdAt: -1 });             // getAllStocks
+stockSchema.index({ adminId: 1, fuelType: 1, createdAt: -1 }); // sale stock-deduction
+stockSchema.index({ adminId: 1, tankId: 1, createdAt: -1 });   // createStock lastStock
+
 export default mongoose.model<IStock>("Stock", stockSchema);
