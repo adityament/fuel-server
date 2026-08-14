@@ -12,6 +12,11 @@ export interface IStock extends Document {
   sales: number;
   closingStock: number;
   tankCapacity: number; // Tank ki max limit
+
+  // 🗑️ Soft delete — deleted entries stay listed under "Deleted Stock"
+  isDeleted: boolean;
+  deletedAt?: Date;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +34,9 @@ const stockSchema = new Schema<IStock>(
     sales: { type: Number, default: 0 },
     closingStock: { type: Number, required: true },
     tankCapacity: { type: Number, required: true }, // Added
+
+    isDeleted: { type: Boolean, default: false },
+    deletedAt: { type: Date },
   },
   { timestamps: true }
 );

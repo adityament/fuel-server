@@ -4,11 +4,16 @@ import User from "../models/userModel";
 
 
 export const createStaff = async (req: any, res: Response) => {
-const { username, email, password, phone } = req.body;
+const { username, email, password, phone, salary } = req.body;
 
 
 const exists = await User.findOne({ email });
 if (exists) return res.status(400).json({ message: "Staff exists" });
+
+
+if (salary != null && (isNaN(Number(salary)) || Number(salary) < 0)) {
+return res.status(400).json({ message: "Salary must be a number >= 0" });
+}
 
 
 const hashedPassword = await bcrypt.hash(password, 10);
@@ -19,6 +24,7 @@ username,
 email,
 password: hashedPassword,
 phone,
+salary: salary != null && salary !== "" ? Number(salary) : undefined,
 role: "staff",
 adminId: req.user._id,
 });
@@ -42,6 +48,55 @@ if (!staff) return res.status(404).json({ message: "Staff not found" });
 await staff.deleteOne();
 res.json({ message: "Staff deleted" });
 };
+/**
+ * ✏️ UPDATE STAFF (ADMIN ONLY, OWN STAFF ONLY)
+ */
+export const updateStaff = async (req: any, res: Response) => {
+  try {
+    const { username, email, phone, salary } = req.body;
+
+    const staff = await User.findOne({
+      _id: req.params.id,
+      adminId: req.user._id,
+      role: "staff",
+    });
+
+    if (!staff) {
+      return res.status(404).json({ message: "Staff not found" });
+    }
+
+    if (
+      salary != null &&
+      salary !== "" &&
+      (isNaN(Number(salary)) || Number(salary) < 0)
+    ) {
+      return res.status(400).json({ message: "Salary must be a number >= 0" });
+    }
+
+    // 🔒 email is the login identity — keep it unique
+    if (email && email !== staff.email) {
+      const taken = await User.findOne({ email });
+      if (taken) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
+      staff.email = email;
+    }
+
+    if (username) staff.username = username;
+    if (phone) staff.phone = phone;
+    if (salary != null && salary !== "") staff.salary = Number(salary);
+
+    await staff.save();
+
+    const { password: _password, ...safeStaff } = staff.toObject();
+
+    res.json({ message: "Staff updated successfully", staff: safeStaff });
+  } catch (error) {
+    console.error("Update staff error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const getMyStaff = async (req: any, res: Response) => {
   try {
     const staff = await User.find({

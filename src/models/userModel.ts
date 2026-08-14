@@ -8,6 +8,9 @@ export interface IUser extends Document {
   role: "superadmin" | "admin" | "staff";
   adminId?: mongoose.Types.ObjectId;
 
+  // 💰 Monthly salary — set when an admin creates a staff member
+  salary?: number;
+
   // 🔥 NEW
   location?: {
     latitude: number;
@@ -30,6 +33,12 @@ const userSchema = new Schema<IUser>(
     adminId: {
       type: Schema.Types.ObjectId,
       ref: "User"
+    },
+
+    // 💰 STAFF SALARY
+    salary: {
+      type: Number,
+      min: 0
     },
 
     // ✅ ADMIN LOCATION
