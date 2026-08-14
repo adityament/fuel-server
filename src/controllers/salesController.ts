@@ -3,6 +3,9 @@ import Sale from "../models/salesModel";
 import Stock from "../models/stocksModel";
 import SaleAudit from "../models/saleAuditModel";
 
+// 🔒 Per pump, per fuel, per calendar day. Voided sales don't burn a slot.
+const MAX_SALES_PER_FUEL_PER_DAY = 2;
+
 // 🔹 SHIFT
 const getCurrentShift = (): string => {
   const hour = new Date().getHours();
@@ -76,7 +79,32 @@ export const createSale = async (req: any, res: Response) => {
     const adminId =
       req.user.role === "admin" ? req.user._id : req.user.adminId;
 
-    const stock = await Stock.findOne({ adminId, fuelType }).sort({
+    // 🔒 DAILY ENTRY LIMIT — max 2 entries per fuel type, per pump, per day.
+    //    Counts admin + staff entries together; voided sales are excluded so a
+    //    corrected mistake doesn't permanently consume a slot.
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const todaysEntries = await Sale.countDocuments({
+      adminId,
+      fuelType,
+      isVoid: { $ne: true },
+      createdAt: { $gte: startOfDay, $lte: endOfDay },
+    });
+
+    if (todaysEntries >= MAX_SALES_PER_FUEL_PER_DAY) {
+      return res.status(400).json({
+        message: `Daily limit reached — only ${MAX_SALES_PER_FUEL_PER_DAY} ${fuelType} sale entries are allowed per day`,
+      });
+    }
+
+    const stock = await Stock.findOne({
+      adminId,
+      fuelType,
+      isDeleted: { $ne: true },
+    }).sort({
       createdAt: -1,
     });
 

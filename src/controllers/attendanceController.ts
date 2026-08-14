@@ -130,7 +130,7 @@ export const updateAttendance = async (req: Request, res: Response) => {
   if (user.role !== "admin") return res.status(403).json({ message: "Only admin can update attendance" });
 
   const attendance = await Attendance.findById(req.params.id);
-  if (!attendance || attendance.adminId.toString() !== user._id) return res.status(404).json({ message: "Attendance not found" });
+  if (!attendance || attendance.adminId.toString() !== user._id.toString()) return res.status(404).json({ message: "Attendance not found" });
 
   const { notes, message, timeIn, timeOut } = req.body;
 
@@ -155,7 +155,7 @@ export const deleteAttendance = async (req: Request, res: Response) => {
   if (user.role !== "admin") return res.status(403).json({ message: "Only admin can delete attendance" });
 
   const attendance = await Attendance.findById(req.params.id);
-  if (!attendance || attendance.adminId.toString() !== user._id) return res.status(404).json({ message: "Attendance not found" });
+  if (!attendance || attendance.adminId.toString() !== user._id.toString()) return res.status(404).json({ message: "Attendance not found" });
 
   await attendance.deleteOne();
   res.json({ message: "Attendance deleted successfully" });

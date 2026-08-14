@@ -1,6 +1,8 @@
 import { Response } from "express";
 import Stock from "../models/stocksModel";
 import Tank from "../models/tankModel";
+import Sale from "../models/salesModel";
+import SaleAudit from "../models/saleAuditModel";
 
 /**
  * ✅ CREATE STOCK (Daily Opening / Tank Update)
@@ -45,10 +47,11 @@ export const createStock = async (req: any, res: Response) => {
       });
     }
 
-    // 🔍 Last stock of this tank
+    // 🔍 Last stock of this tank (deleted entries must not seed the opening)
     const lastStock = await Stock.findOne({
       adminId,
       tankId,
+      isDeleted: { $ne: true },
     }).sort({ createdAt: -1 });
 
     // Opening stock logic
@@ -107,9 +110,12 @@ export const getAllStocks = async (req: any, res: Response) => {
         ? req.user._id
         : req.user.adminId;
 
-    const stocks = await Stock.find({ adminId }).sort({
-      createdAt: -1,
-    }).lean();
+    const stocks = await Stock.find({
+      adminId,
+      isDeleted: { $ne: true },
+    })
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.json(stocks);
   } catch (error) {
@@ -219,7 +225,11 @@ export const updateStock = async (req: any, res: Response) => {
 };
 
 /**
- * ✅ DELETE STOCK (ADMIN ONLY)
+ * ⚠️ DELETE STOCK (ADMIN ONLY) — DESTRUCTIVE
+ *
+ * Soft-deletes the stock entry AND voids every sale recorded against it,
+ * because those sales deducted from this exact tank balance. Nothing is
+ * erased: both stay readable under "Deleted Stock".
  */
 export const deleteStock = async (req: any, res: Response) => {
   try {
@@ -243,10 +253,52 @@ export const deleteStock = async (req: any, res: Response) => {
       });
     }
 
-    await stock.deleteOne();
+    if (stock.isDeleted) {
+      return res.status(400).json({
+        message: "Stock already deleted",
+      });
+    }
+
+    // 🔗 Sales that deducted from this stock row
+    const linkedSales = await Sale.find({
+      stockId: stock._id,
+      isVoid: { $ne: true },
+    });
+
+    if (linkedSales.length > 0) {
+      await Sale.updateMany(
+        { stockId: stock._id, isVoid: { $ne: true } },
+        { $set: { isVoid: true } }
+      );
+
+      // 📝 keep the audit trail honest about the cascade
+      await SaleAudit.insertMany(
+        linkedSales.map((sale) => ({
+          saleId: sale._id,
+          adminId: sale.adminId,
+          performedBy: req.user._id,
+          action: "void",
+          before: {
+            openingReading: sale.openingReading,
+            closingReading: sale.closingReading,
+            rate: sale.rate,
+            quantity: sale.quantity,
+            amount: sale.amount,
+            paymentMode: sale.paymentMode,
+            customerId: sale.customerId,
+          },
+          reason: `Stock entry ${stock._id} deleted`,
+        }))
+      ).catch((e) => console.error("Sale audit (stock cascade) failed:", e));
+    }
+
+    stock.isDeleted = true;
+    stock.deletedAt = new Date();
+    await stock.save();
 
     res.json({
       message: "Stock deleted successfully",
+      voidedSales: linkedSales.length,
     });
   } catch (error) {
     console.error("Delete Stock Error:", error);
@@ -254,5 +306,50 @@ export const deleteStock = async (req: any, res: Response) => {
     res.status(500).json({
       message: "Error deleting stock",
     });
+  }
+};
+
+/**
+ * 🗑️ GET DELETED STOCKS (ADMIN ONLY)
+ */
+export const getDeletedStocks = async (req: any, res: Response) => {
+  try {
+    const stocks = await Stock.find({
+      adminId: req.user._id,
+      isDeleted: true,
+    })
+      .sort({ deletedAt: -1 })
+      .lean();
+
+    res.json(stocks);
+  } catch (error) {
+    console.error("Get Deleted Stocks Error:", error);
+    res.status(500).json({ message: "Error fetching deleted stocks" });
+  }
+};
+
+/**
+ * 🗑️ GET SALES VOIDED WITH A DELETED STOCK (ADMIN ONLY)
+ */
+export const getDeletedStockSales = async (req: any, res: Response) => {
+  try {
+    const stock = await Stock.findById(req.params.id);
+
+    if (!stock) {
+      return res.status(404).json({ message: "Stock not found" });
+    }
+
+    if (stock.adminId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const sales = await Sale.find({ stockId: stock._id })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json(sales);
+  } catch (error) {
+    console.error("Get Deleted Stock Sales Error:", error);
+    res.status(500).json({ message: "Error fetching deleted sales" });
   }
 };
