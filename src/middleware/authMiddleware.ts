@@ -12,6 +12,11 @@ export const auth = async (req: any, res: Response, next: NextFunction) => {
     const token = authHeader.split(" ")[1];
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET_KEY!);
 
+    // 🚫 refresh tokens are only accepted at /api/refresh, never here
+    if (decoded.type === "refresh") {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
     // ✅ SUPER ADMIN (ENV BASED, DB ME NAHI)
     if (decoded.role === "superadmin") {
       req.user = {
