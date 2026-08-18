@@ -13,6 +13,7 @@ import stockRoutes from "./routes/stockRoute";
 import tankRoutes from "./routes/tankRoutes";
 import expenseRoutes from "./routes/expenseRoute";
 import onlinePaymentRoutes from "./routes/onlineRoutes";
+import healthRoutes from "./routes/healthRoute";
 
 const startServer = async () => {
   try {
@@ -24,6 +25,7 @@ const startServer = async () => {
     app.use(cors());
     app.use(express.json());
 
+    app.use("/api/health", healthRoutes);
     app.use("/api", routes);
     app.use("/api/sales", salesRoutes);
     app.use("/api/attendance", attendanceRoutes);
